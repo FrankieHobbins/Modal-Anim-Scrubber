@@ -42,6 +42,7 @@ class AnimScrubber(bpy.types.Operator):
             return {'FINISHED'}
         elif event.type == 'Z':  #Add motion paths
                 #sets last keyframe based on action length       
+            bpy.ops.pose.paths_clear()
             scn = bpy.context.scene
             if bpy.data.actions:
                 if bpy.context.scene.use_preview_range == True: 
@@ -87,6 +88,7 @@ class AnimScrubber(bpy.types.Operator):
             action = obj.animation_data.action   #current action     
             if bpy.context.selected_pose_bones != None:                
                 bpy.ops.anim.keyframe_delete()
+                
         elif event.type == 'A':  #Move Position Bone this if for personal project
             print("Move Position Bone")
             pointtest = False 
@@ -378,31 +380,32 @@ class AnimScrubber(bpy.types.Operator):
                                                 elif "euler" in f.data_path:
                                                     if f.array_index == 2:
                                                         k.co[1] =  k1.co[1]*-1
-                                            f.update()
+                                            f.update()                   
 
                 elif centrebone == False:
                     #create a list of frames with keys on them
                     for f in bpy.data.actions[action.name].fcurves:    
-                        if selbone.name in f.data_path:
+                        if ('"'+selbone.name+'"') in f.data_path:
                             for p in f.keyframe_points:
                                 if p.co[0] not in framenumbers:
                                     framenumbers.append(p.co[0])
 
                     #create a list of f curve indexs the selected bone uses
                     for f in bpy.data.actions[action.name].fcurves:    
-                        if selbone.name in f.data_path:
+                        if ('"'+selbone.name+'"') in f.data_path:
                             fcurveindexselbone.append(i)                
                         i += 1
 
                     #create a list of f curve indexs the opposite bone uses
                     for f in bpy.data.actions[action.name].fcurves:    
-                        if oppobone in f.data_path:
+                        if ('"'+oppobone+'"') in f.data_path:
+                            print (oppobone, "  ", f.data_path)
                             fcurveindexoppobone.append(ii)                
                         ii += 1
 
                     #remove all but 1 keyframes from oppbone side
                     for fc in action.fcurves:  
-                        if oppobone not in fc.data_path:
+                        if ('"'+oppobone+'"') not in fc.data_path:
                             continue        
                         while len(fc.keyframe_points) > 1:
                             fc.keyframe_points.remove(fc.keyframe_points[0])
@@ -412,17 +415,23 @@ class AnimScrubber(bpy.types.Operator):
                         numofkeyframepoitns = (len(action.fcurves[fcurveindexselbone[f]].keyframe_points))
                 #        print (numofkeyframepoitns, "in", action.fcurves[fcurveindexselbone[f]].data_path)
                 #        print ((len(action.fcurves[fcurveindexoppobone[f]].keyframe_points)), "in", action.fcurves[fcurveindexoppobone[f]].data_path)
-                        while len(action.fcurves[fcurveindexoppobone[f]].keyframe_points) < len(action.fcurves[fcurveindexselbone[f]].keyframe_points):
+                        while len(action.fcurves[fcurveindexoppobone[f]].keyframe_points) < len(action.fcurves[fcurveindexselbone[f]].keyframe_points):         
                             action.fcurves[fcurveindexoppobone[f]].keyframe_points.add()
 
                     #loop keyframe points on all opposite bone fcruves and grab data from selbone fcruve
+                    print ("r1 ", range(len(fcurveindexoppobone)))
+                    print ("r2 ", range(len(action.fcurves[fcurveindexselbone[f]].keyframe_points)))
+                    print ("r3 ", range(len(action.fcurves[fcurveindexoppobone[f]].keyframe_points)))
+                    
                     for f in range(len(fcurveindexoppobone)):
+                        print (f)
                         for k in range(len(action.fcurves[fcurveindexselbone[f]].keyframe_points)):
+                            print(action.fcurves[fcurveindexselbone[f]].keyframe_points[k].co[0])
                             action.fcurves[fcurveindexoppobone[f]].keyframe_points[k].co = action.fcurves[fcurveindexselbone[f]].keyframe_points[k].co
                             
                     #flippose
                     for f in bpy.data.actions[action.name].fcurves:    
-                        if oppobone in f.data_path:
+                        if ('"'+oppobone+'"') in f.data_path:
                             if "location" in f.data_path:
                                if f.array_index == 0:
                                    for k in f.keyframe_points:
@@ -443,7 +452,7 @@ class AnimScrubber(bpy.types.Operator):
                     startframe  = bpy.context.scene.frame_start-1
                     #offset frames
                     for f in bpy.data.actions[action.name].fcurves:    
-                        if oppobone in f.data_path:
+                        if ('"'+oppobone+'"') in f.data_path:
                             hm = len(f.keyframe_points)-1
                             for k in f.keyframe_points:
                                 k.co[0]=k.co[0]+((endframe-startframe)/2) #offset everything                
@@ -459,6 +468,39 @@ class AnimScrubber(bpy.types.Operator):
                                 if k.co[0] == startframe:
                                     k.co[1]= copythis                    
                         f.update()
+                        
+            #copy end frame to start
+            #see if current frame is end frame                     
+            if bpy.context.scene.frame_current == bpy.context.scene.frame_end:
+                print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                for f in bpy.data.actions[action.name].fcurves:
+                    if ('"'+selbone.name+'"') in f.data_path:
+                        #find last keyframe
+                        for k in f.keyframe_points:
+                            if k.co[0] == (bpy.context.scene.frame_end):
+                                #find first keyframe
+                                for k1 in f.keyframe_points:
+                                    if k1.co[0] == (0): 
+                                    #copy last keyframe to first keyframe
+                                        k1.co[1] = k.co[1]
+                                        print("bbbbbbbbbbbbbbbbbbbbbbbbb")
+                                    f.update()
+            
+            #copy start frame to end
+            #see if current frame is start frame 
+            if bpy.context.scene.frame_current == (0):
+                for f in bpy.data.actions[action.name].fcurves:
+                    if ('"'+selbone.name+'"') in f.data_path:
+                        #find first keyframe
+                        for k in f.keyframe_points:
+                            if k.co[0] == (0):
+                                #find last keyframe
+                                for k1 in f.keyframe_points:                                            
+                                    if k1.co[0] == (bpy.context.scene.frame_end): 
+                                    #copy first keyframe to last keyframe
+                                        k1.co[1] = k.co[1]
+                                    f.update()
+
             bpy.ops.pose.paths_calculate(start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
             return {'FINISHED'}
         elif event.type == 'WHEELUPMOUSE':  # Create or Duplicate Keyframe base on starting position

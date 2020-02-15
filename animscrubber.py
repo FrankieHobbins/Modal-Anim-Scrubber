@@ -1,9 +1,9 @@
 bl_info = {
     "name": "F Anim Scrubber",
     "author": "Frankie",
-    "version": (1, 7),
-    "blender": (2, 76, 0),
-    "location": "View3D > Add > Mesh > New Object",
+    "version": (0, 9),
+    "blender": (2, 80, 0),
+    "location": "3d view",
     "description": "Drag keyframes",
     "warning": "",
     "wiki_url": "",
@@ -32,13 +32,18 @@ class AnimScrubber(bpy.types.Operator):
             if bpy.context.scene.frame_current > bpy.context.scene.frame_end:
                 bpy.context.scene.frame_set(bpy.context.scene.frame_start)
                 self.looped += 1
+                bpy.ops.screen.frame_offset()
             elif bpy.context.scene.frame_current < bpy.context.scene.frame_start:
+                bpy.ops.screen.frame_offset()
                 bpy.context.scene.frame_set(bpy.context.scene.frame_end)
                 self.looped -= 1
+                bpy.ops.screen.frame_offset()
             else:
                 bpy.context.scene.frame_set(self.valued - self.dampedvalue + self.sframe - (bpy.context.scene.frame_end*self.looped))
+                bpy.ops.screen.frame_offset()
 #            self.execute(context)
         elif event.type == 'LEFTMOUSE' and event.value == "RELEASE":  # Confirm
+            bpy.ops.screen.frame_offset()
             return {'FINISHED'}
         elif event.type == 'Z':  #Add motion paths
                 #sets last keyframe based on action length       
@@ -323,7 +328,7 @@ class AnimScrubber(bpy.types.Operator):
                                     for k in f.keyframe_points:
                                         k.co[1] =  k.co[1]*-1
                             elif "euler" in f.data_path:
-                                if f.array_index == 2:
+                                if f.array_index == 1 or f.array_index == 2:
                                     for k in f.keyframe_points:
                                         k.co[1] =  k.co[1]*-1
                             f.update()
@@ -366,7 +371,7 @@ class AnimScrubber(bpy.types.Operator):
             bpy.ops.pose.paths_calculate(start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
             return {'FINISHED'}
             
-        elif event.type == 'E':             # Copy and flip animation for selected bone               
+        elif event.type == 'E':             # Copy and flip animation for selected bone with time offset
             obj = bpy.context.object             #active object
             action = obj.animation_data.action   #current action  
             for selbone in bpy.context.selected_pose_bones:
@@ -713,13 +718,28 @@ class AnimScrubber(bpy.types.Operator):
                self.d[bpy.context.selected_pose_bones[i].name] = bpy.context.selected_pose_bones[i].matrix.copy() #matrix needs copy or it remains linked            
         print(context.window_manager.modal_handler_add(self))
         return {'RUNNING_MODAL'}
+        
+# store keymaps here to access after registration
+addon_fkeymaps = []
                 
 def register():
     bpy.utils.register_class(AnimScrubber)
+    
+    wm = bpy.context.window_manager
+    km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D', region_type='WINDOW', modal=False)
+    kmi = km.keymap_items.new('anim.scrubber', 'LEFTMOUSE', 'PRESS', alt=True)  
+    addon_fkeymaps.append(km)
+
 
 
 def unregister():
     bpy.utils.unregister_class(AnimScrubber)
+    # handle the keymap, not sure why I need this but didnt seem to work when I deleted it
+    wm = bpy.context.window_manager
+    for km in addon_fkeymaps:
+        wm.keyconfigs.addon.keymaps.remove(km)
+    # clear the list
+    del addon_fkeymaps[:]
 
 
 if __name__ == "__main__":

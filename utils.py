@@ -1,5 +1,6 @@
 import bpy
 
+from . import tools
 
 class GenericOperators(bpy.types.Operator):
     bl_idname = "animscrubber.operators"
@@ -30,7 +31,7 @@ class GenericOperators(bpy.types.Operator):
             for g in action.groups:
                 if selbone.name == g.name:
                     for channel in g.channels:
-                        framelist = []
+                        framelist = [] #TODO this means it only gets the last lot? if thats good enough maybe return after the fast one
                         for p in channel.keyframe_points:
                             framelist.append(p.co[0])
 
@@ -53,63 +54,6 @@ class GenericOperators(bpy.types.Operator):
                             f.keyframe_points[new_key].co[1] = f.keyframe_points[keyindex].co[1]
                             f.update()
 
-    def throw_key_along_down(self):
-        keytest = False
-        obj = bpy.context.object  # active object
-        action = obj.animation_data.action  # current action
-        for selbone in bpy.context.selected_pose_bones:
-            for g in action.groups:
-                if selbone.name == g.name:  # checks to see if selected bone matches a bone in the action
-                    for channel in g.channels:   # channel is fcurve
-                        framelist = []
-                        for p in channel.keyframe_points:
-                            # making a list of all the keyframes
-                            framelist.append(p.co[0])
-        for f in range(0, len(framelist)):
-            if framelist[f] == bpy.context.scene.frame_current:
-                # using the keyframe list to find the next keyframe
-                bonenextkeyframe = (framelist[f])
-                keyindex = f
-                keytest = True
-        if bpy.context.selected_pose_bones != None and keytest == True:
-            if bpy.context.selected_pose_bones.count != 0:
-                for selbone in bpy.context.selected_pose_bones:
-                    for f in bpy.data.actions[action.name].fcurves:
-                        b = (str(f.data_path))
-                        if ("\""+selbone.name+"\"") in b:
-                            f.keyframe_points[keyindex +
-                                              1].co[1] = f.keyframe_points[keyindex].co[1]
-                            f.update()
-
-    def throw_key_along_up(self):
-        keytest = False
-        obj = bpy.context.object  # active object
-        action = obj.animation_data.action  # current action
-        for selbone in bpy.context.selected_pose_bones:
-            for g in action.groups:
-                if selbone.name == g.name:  # checks to see if selected bone matches a bone in the action
-                    for channel in g.channels:   # channel is fcurve
-                        framelist = []
-                        for p in channel.keyframe_points:
-                            # making a list of all the keyframes
-                            framelist.append(p.co[0])
-                            list(framelist)
-        for f in range(0, len(framelist)):
-            if framelist[f] == bpy.context.scene.frame_current:
-                # using the keyframe list to find the next keyframe
-                bonenextkeyframe = (framelist[f])
-                keyindex = f
-                keytest = True
-        if bpy.context.selected_pose_bones != None and keytest == True:
-            if bpy.context.selected_pose_bones.count != 0:
-                for selbone in bpy.context.selected_pose_bones:
-                    for f in bpy.data.actions[action.name].fcurves:
-                        b = (str(f.data_path))
-                        if ("\""+selbone.name+"\"") in b:
-                            f.keyframe_points[keyindex -
-                                              1].co[1] = f.keyframe_points[keyindex].co[1]
-                            f.update()
-
     def mirror_time_and_space():
         obj = bpy.context.object  # active object
         action = obj.animation_data.action  # current action
@@ -123,20 +67,12 @@ class GenericOperators(bpy.types.Operator):
             ii = 0
             copythis = 0
             centrebone = False
-            # work out opposite bone
-            if "_R" in selbone.name:
-                oppobone = str(selbone.name).replace("_R", "_L")
-            elif "_L" in selbone.name:
-                oppobone = str(selbone.name).replace("_L", "_R")
-            elif ".L" in selbone.name:
-                oppobone = str(selbone.name).replace(".L", ".R")
-            elif ".R" in selbone.name:
-                oppobone = str(selbone.name).replace(".R", ".L")
-            else:
-                oppobone = selbone.name
-                centrebone = True
-            print("selected bone", selbone.name)
-            print("opposite bone", oppobone)
+
+            opposite_bone = tools.Tools.find_opposite_bone(selbone)
+            
+            oppobone = opposite_bone[0]
+            centrebone = opposite_bone[1]
+            
             # if bone a central bone with no opposite
             if centrebone == True:
                 # if in first half of anim

@@ -16,14 +16,17 @@ import importlib
 if "main" in locals():    
     importlib.reload(main)
     importlib.reload(utils)
+    importlib.reload(tools)
     
     
 from . import main
 from . import utils
+from . import tools
 
 classes =   (
     main.AnimScrubber,
     utils.GenericOperators,
+    tools.Tools,
     )
         
 # store keymaps here to access after registration

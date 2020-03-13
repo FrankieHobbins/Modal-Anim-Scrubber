@@ -6,19 +6,19 @@ class AnimScrubber(bpy.types.Operator):
     bl_idname = "animscrubber.main"
     bl_label = "Scrub or Drag Keyframe"
     bl_options = {'REGISTER', 'UNDO'}
-
+    """
     def __init__(self):
         print("-------anim.scrubber start------")
 
     def __del__(self):
         print("-------anim.scrubber end-------")
-
-    Scale = bpy.props.FloatProperty(name="Sensitivity Scale", default=1)
-    ScaleBySceneLength = bpy.props.BoolProperty(
+    """
+    Scale: bpy.props.FloatProperty(name="Sensitivity Scale", default=1)
+    ScaleBySceneLength: bpy.props.BoolProperty(
         name="Adjust Sensitivity With Scene Length", default=False)
-    StandardSceneLength = bpy.props.FloatProperty(
+    StandardSceneLength: bpy.props.FloatProperty(
         name="Standard Scene Length", default=100)
-    LengthScale = bpy.props.FloatProperty(name="Length Scale", default=1)
+    LengthScale: bpy.props.FloatProperty(name="Length Scale", default=1)
 
     def modal(self, context, event):
         self.valued = event.mouse_x / 10
@@ -83,7 +83,7 @@ class AnimScrubber(bpy.types.Operator):
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        print("invoke")
+        # print("invoke")
         self.sframe = bpy.context.scene.frame_current
         self.value = event.mouse_x
         self.dampedvalue = event.mouse_x / 10
@@ -98,5 +98,5 @@ class AnimScrubber(bpy.types.Operator):
                 # matrix needs copy or it remains linked
                 self.d[bpy.context.selected_pose_bones[i]
                        .name] = bpy.context.selected_pose_bones[i].matrix.copy()
-        print(context.window_manager.modal_handler_add(self))
+        context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}

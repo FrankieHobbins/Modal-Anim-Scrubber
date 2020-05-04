@@ -22,4 +22,14 @@ class Tools(bpy.types.Operator):
         print("selected bone", selbone.name)
         print("opposite bone", oppobone)
         return [oppobone, centrebone]
+
+    def recalculate_bone_paths(self):
+        lastframe = bpy.context.scene.frame_end
+        bpy.ops.pose.paths_clear()
+        
+        if bpy.context.selected_pose_bones:
+            bpy.ops.pose.paths_calculate(start_frame=0, end_frame=lastframe, bake_location='HEADS')                    
+
+        return
+        
         

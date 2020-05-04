@@ -2,6 +2,7 @@ import bpy
 
 from . import tools
 
+
 class GenericOperators(bpy.types.Operator):
     bl_idname = "animscrubber.operators"
     bl_label = "Scrub or Drag Keyframe"
@@ -31,7 +32,7 @@ class GenericOperators(bpy.types.Operator):
             for g in action.groups:
                 if selbone.name == g.name:
                     for channel in g.channels:
-                        framelist = [] #TODO this means it only gets the last lot? if thats good enough maybe return after the fast one
+                        framelist = []  # TODO this means it only gets the last lot? if thats good enough maybe return after the fast one
                         for p in channel.keyframe_points:
                             framelist.append(p.co[0])
 
@@ -42,19 +43,19 @@ class GenericOperators(bpy.types.Operator):
                 keyindex = f
                 keytest = True
 
-        if bpy.context.selected_pose_bones is not None and keytest == True:
-            if bpy.context.selected_pose_bones.count != 0: #TODO delete?
+        if bpy.context.selected_pose_bones is not None and keytest:
+            if bpy.context.selected_pose_bones.count != 0:  # TODO delete?
                 for selbone in bpy.context.selected_pose_bones:
                     for f in bpy.data.actions[action.name].fcurves:
                         b = (str(f.data_path))
-                        if ("\""+selbone.name+"\"") in b:
+                        if ("\"" + selbone.name + "\"") in b:
                             new_key = keyindex + 1
                             if direction == "DOWN":
                                 new_key = keyindex - 1
                             f.keyframe_points[new_key].co[1] = f.keyframe_points[keyindex].co[1]
                             f.update()
 
-    def mirror_time_and_space():
+    def mirror_time_and_space(self):
         obj = bpy.context.object  # active object
         action = obj.animation_data.action  # current action
         for selbone in bpy.context.selected_pose_bones:
@@ -67,31 +68,28 @@ class GenericOperators(bpy.types.Operator):
             ii = 0
             copythis = 0
             centrebone = False
-
-            opposite_bone = tools.Tools.find_opposite_bone(selbone)
-            
+            opposite_bone = tools.Tools.find_opposite_bone(self, selbone)
             oppobone = opposite_bone[0]
             centrebone = opposite_bone[1]
-            
             # if bone a central bone with no opposite
-            if centrebone == True:
+            if centrebone:
                 # if in first half of anim
-                if bpy.context.scene.frame_current < (0.5*bpy.context.scene.frame_end):
+                if bpy.context.scene.frame_current < (0.5 * bpy.context.scene.frame_end):
                     for f in bpy.data.actions[action.name].fcurves:
-                        if ('"'+selbone.name+'"') in f.data_path:
+                        if ('"' + selbone.name + '"') in f.data_path:
                             NumOfKeyframesInFirstHalf = 0
                             NumOfKeyframesInSecondHalf = 0
                             for k in f.keyframe_points:
-                                if k.co[0] < (0.5*bpy.context.scene.frame_end):
+                                if k.co[0] < (0.5 * bpy.context.scene.frame_end):
                                     NumOfKeyframesInFirstHalf += 1
-                                elif k.co[0] >= (0.5*bpy.context.scene.frame_end):
+                                elif k.co[0] >= (0.5 * bpy.context.scene.frame_end):
                                     NumOfKeyframesInSecondHalf += 1
                             NumOfKeyframes = NumOfKeyframesInSecondHalf + NumOfKeyframesInFirstHalf
 
                             # remove keyframes from second half of anim
                             while NumOfKeyframesInSecondHalf > 0:
                                 f.keyframe_points.remove(
-                                    f.keyframe_points[NumOfKeyframes-1])
+                                    f.keyframe_points[NumOfKeyframes - 1])
                                 NumOfKeyframesInSecondHalf -= 1
                                 NumOfKeyframes -= 1
 
@@ -99,7 +97,7 @@ class GenericOperators(bpy.types.Operator):
                             i = 0
                             for k in f.keyframe_points:
                                 f.keyframe_points.add(1)
-                                f.keyframe_points[len(f.keyframe_points)-1].co = ((f.keyframe_points[i].co[0])+(
+                                f.keyframe_points[len(f.keyframe_points)-1].co = ((f.keyframe_points[i].co[0]) + (
                                     0.5*bpy.context.scene.frame_end)), (f.keyframe_points[i].co[1])
                                 f.keyframe_points[len(
                                     f.keyframe_points)-1].handle_left_type = "AUTO_CLAMPED"
@@ -244,8 +242,7 @@ class GenericOperators(bpy.types.Operator):
             #        print (numofkeyframepoitns, "in", action.fcurves[fcurveindexselbone[f]].data_path)
             #        print ((len(action.fcurves[fcurveindexoppobone[f]].keyframe_points)), "in", action.fcurves[fcurveindexoppobone[f]].data_path)
                     while len(action.fcurves[fcurveindexoppobone[f]].keyframe_points) < len(action.fcurves[fcurveindexselbone[f]].keyframe_points):
-                        action.fcurves[fcurveindexoppobone[f]
-                                       ].keyframe_points.add()
+                        action.fcurves[fcurveindexoppobone[f]].keyframe_points.add(1)
 
                 # loop keyframe points on all opposite bone fcruves and grab data from selbone fcruve
                 print("r1 ", range(len(fcurveindexoppobone)))
@@ -638,7 +635,7 @@ class GenericOperators(bpy.types.Operator):
         for bones in obj.pose.bones:
             if "\"_Position\"" in str(bones):  # check if bone exists
                 bones.matrix.translation = bpy.context.selected_pose_bones[0].matrix.translation
-                #bones.location[1] = 0
+                # bones.location[1] = 0
 
     def delete_keyframe(self):
         print("delete")
@@ -646,6 +643,7 @@ class GenericOperators(bpy.types.Operator):
         action = obj.animation_data.action  # current action
         if bpy.context.selected_pose_bones != None:
             bpy.ops.anim.keyframe_delete()
+        # tools.Tools.recalculate_bone_paths()
 
     def set_range(self):
         # sets last keyframe based on action length

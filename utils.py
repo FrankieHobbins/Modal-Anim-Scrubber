@@ -239,8 +239,12 @@ class GenericOperators(bpy.types.Operator):
                 for f in range(len(fcurveindexselbone)):
                     numofkeyframepoitns = (
                         len(action.fcurves[fcurveindexselbone[f]].keyframe_points))
-            #        print (numofkeyframepoitns, "in", action.fcurves[fcurveindexselbone[f]].data_path)
-            #        print ((len(action.fcurves[fcurveindexoppobone[f]].keyframe_points)), "in", action.fcurves[fcurveindexoppobone[f]].data_path)
+                    
+                    print("----")
+                    print(numofkeyframepoitns)
+                    #print(numofkeyframepoitns, "in", action.fcurves[fcurveindexselbone[f]].data_path)
+                    #print ((len(action.fcurves[fcurveindexoppobone[f]].keyframe_points)), "in", action.fcurves[fcurveindexoppobone[f]].data_path)
+            
                     while len(action.fcurves[fcurveindexoppobone[f]].keyframe_points) < len(action.fcurves[fcurveindexselbone[f]].keyframe_points):
                         action.fcurves[fcurveindexoppobone[f]].keyframe_points.add(1)
 

@@ -8,7 +8,7 @@ class GenericOperators(bpy.types.Operator):
     bl_label = "Scrub or Drag Keyframe"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def change_frame(self):
+    def change_frame(self):        
         scene = bpy.context.scene
         if scene.frame_current > scene.frame_end:
             scene.frame_set(scene.frame_start)
@@ -18,8 +18,7 @@ class GenericOperators(bpy.types.Operator):
             scene.frame_set(scene.frame_end)
             self.looped -= 1
         else:
-            scene.frame_set(
-                self.valued - self.dampedvalue + self.sframe - (scene.frame_end * self.looped))
+            scene.frame_set(self.valued - self.dampedvalue + self.sframe - (scene.frame_end * self.looped))
         bpy.ops.screen.frame_offset()
 
     def throw_key_generic(self, direction):
@@ -338,8 +337,7 @@ class GenericOperators(bpy.types.Operator):
                                     k1.co[1] = k.co[1]
                                 f.update()
 
-        bpy.ops.pose.paths_calculate(
-            start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
+        #bpy.ops.pose.paths_calculate(start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
         return {'FINISHED'}
 
     def mirror_space(self):
@@ -356,19 +354,38 @@ class GenericOperators(bpy.types.Operator):
             copythis = 0
             centrebone = False
             # work out opposite bone
-            if "_R" in selbone.name:
-                oppobone = str(selbone.name).replace("_R", "_L")
-            elif "_L" in selbone.name:
-                oppobone = str(selbone.name).replace("_L", "_R")
+
+            if selbone.name[-1:] == "L":
+                oppobone = selbone.name[:-1] + "R"
+            elif selbone.name[-1:] == "R":
+                oppobone = selbone.name[:-1] + "L"
             elif ".L" in selbone.name:
                 oppobone = str(selbone.name).replace(".L", ".R")
             elif ".R" in selbone.name:
                 oppobone = str(selbone.name).replace(".R", ".L")
+            elif "L." in selbone.name:
+                oppobone = str(selbone.name).replace("L.", "R.")
+            elif "R." in selbone.name:
+                oppobone = str(selbone.name).replace("R.", "L.")
+            elif "_R_" in selbone.name:
+                oppobone = str(selbone.name).replace("_R_", "_L_")
+            elif "_L_" in selbone.name:
+                oppobone = str(selbone.name).replace("_L_", "_R_")
+            elif "_R" in selbone.name:
+                oppobone = str(selbone.name).replace("_R", "_L")
+            elif "_L" in selbone.name:
+                oppobone = str(selbone.name).replace("_L", "_R")
             else:
                 oppobone = selbone.name
                 centrebone = True
-            print("selected bone", selbone.name)
-            print("opposite bone", oppobone)
+
+            if not [i for i in bpy.context.selected_objects[0].pose.bones if i.name == oppobone]:
+                print("possible error (or not) with ", selbone.name)
+                oppobone = selbone.name
+                centrebone = True
+
+            print("A selected bone", selbone.name)
+            print("A opposite bone", oppobone)
             # if bone a central bone with no opposite
             if centrebone == True:
                 print("ignoring this command as bone is a centre bone")
@@ -409,7 +426,7 @@ class GenericOperators(bpy.types.Operator):
             #        print ((len(action.fcurves[fcurveindexoppobone[f]].keyframe_points)), "in", action.fcurves[fcurveindexoppobone[f]].data_path)
                     while len(action.fcurves[fcurveindexoppobone[f]].keyframe_points) < len(action.fcurves[fcurveindexselbone[f]].keyframe_points):
                         action.fcurves[fcurveindexoppobone[f]
-                                       ].keyframe_points.add()
+                                       ].keyframe_points.add(1)
 
                 # loop keyframe points on all opposite bone fcruves and grab data from selbone fcruve
                 print("r1 ", range(len(fcurveindexoppobone)))
@@ -481,8 +498,7 @@ class GenericOperators(bpy.types.Operator):
                                     k1.co[1] = k.co[1]
                                 f.update()
 
-        bpy.ops.pose.paths_calculate(
-            start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
+        #bpy.ops.pose.paths_calculate(start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
         return {'FINISHED'}
 
     def fix_loop(self):
@@ -556,8 +572,7 @@ class GenericOperators(bpy.types.Operator):
                 fcurve.keyframe_points.remove(
                     fcurve.keyframe_points[len(fcurve.keyframe_points)-1])
 
-        bpy.ops.pose.paths_calculate(
-            start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
+        #bpy.ops.pose.paths_calculate(start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
         return {'FINISHED'}
 
     def first_frame_to_last(self):
@@ -580,8 +595,7 @@ class GenericOperators(bpy.types.Operator):
                                         k.co[1] = f.evaluate(
                                             bpy.context.scene.frame_end)
                             f.update()
-        bpy.ops.pose.paths_calculate(
-            start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
+        #bpy.ops.pose.paths_calculate(start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
 
     def clone_keyframe(self):
         pointtest = False
@@ -666,5 +680,4 @@ class GenericOperators(bpy.types.Operator):
             print("no actions")
             # turns on motion curves but dosent update if selection hasnt changed
 
-        bpy.ops.pose.paths_calculate(
-            start_frame=0, end_frame=lastkey+1, bake_location='HEADS')
+        #bpy.ops.pose.paths_calculate(start_frame=0, end_frame=lastkey+1, bake_location='HEADS')

@@ -8,6 +8,7 @@ class Tools(bpy.types.Operator):
 
     def find_opposite_bone(self, selbone):
         centrebone = False
+        # TODO use regex like /_L(?:$|[._])/gm
         if selbone.name[-1:] == "L":
             oppobone = selbone.name[:-1] + "R"
         elif selbone.name[-1:] == "R":
@@ -29,11 +30,17 @@ class Tools(bpy.types.Operator):
         elif "_L" in selbone.name:
             oppobone = str(selbone.name).replace("_L", "_R")
         else:
+            # check if oppo bone is valid
             oppobone = selbone.name
             centrebone = True
-
-        print("selected bone", selbone.name)
-        print("opposite bone", oppobone)
+        
+        if not [i for i in bpy.context.selected_objects[0].pose.bones if i.name == oppobone]:
+            print("possible error (or not) with ", selbone.name)
+            oppobone = selbone.name
+            centrebone = True
+        
+        print("B selected bone", selbone.name)
+        print("B opposite bone", oppobone)
         return [oppobone, centrebone]
 
     def recalculate_bone_paths(self):
@@ -41,5 +48,4 @@ class Tools(bpy.types.Operator):
         if bpy.context.selected_pose_bones:
             bpy.ops.pose.paths_clear()
             bpy.ops.pose.paths_calculate(start_frame=0, end_frame=lastframe, bake_location='HEADS')
-
         return

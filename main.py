@@ -16,14 +16,12 @@ class AnimScrubber(bpy.types.Operator):
         print("-------anim.scrubber end-------")
     """
     Scale: bpy.props.FloatProperty(name="Sensitivity Scale", default=1)
-    ScaleBySceneLength: bpy.props.BoolProperty(
-        name="Adjust Sensitivity With Scene Length", default=False)
-    StandardSceneLength: bpy.props.FloatProperty(
-        name="Standard Scene Length", default=100)
+    ScaleBySceneLength: bpy.props.BoolProperty(name="Adjust Sensitivity With Scene Length", default=False)
+    StandardSceneLength: bpy.props.FloatProperty(name="Standard Scene Length", default=100)
     LengthScale: bpy.props.FloatProperty(name="Length Scale", default=1)
 
     def modal(self, context, event):
-        self.valued = event.mouse_x / 10        
+        self.valued = event.mouse_x / 10
         if event.type == 'MOUSEMOVE':
             # change current frame based on mouse
             utils.GenericOperators.change_frame(self)
@@ -31,6 +29,7 @@ class AnimScrubber(bpy.types.Operator):
         elif event.type == 'Z':
             # add motion paths and set scene first/last frame to match action
             utils.GenericOperators.set_range(self)
+            tools.Tools.recalculate_bone_paths(self)
 
         elif event.type == 'X':
             # delete keyframe under current frame
@@ -59,18 +58,18 @@ class AnimScrubber(bpy.types.Operator):
 
         elif event.type == 'R':
             # fix looping warning will break NLA
-            return utils.GenericOperators.fix_loop(self)
             tools.Tools.recalculate_bone_paths(self)
+            return utils.GenericOperators.fix_loop(self)
 
         elif event.type == 'S':
             # copy and flip animation for selected bone
-            return utils.GenericOperators.mirror_space(self)
             tools.Tools.recalculate_bone_paths(self)
+            return utils.GenericOperators.mirror_space(self)
 
         elif event.type == 'E':
             # Copy and flip animation for selected bone with time offset
-            return utils.GenericOperators.mirror_time_and_space(self)
             tools.Tools.recalculate_bone_paths(self)
+            return utils.GenericOperators.mirror_time_and_space(self)
 
         elif event.type == 'WHEELUPMOUSE':
             # Create or Duplicate Keyframe base on starting position
@@ -91,7 +90,6 @@ class AnimScrubber(bpy.types.Operator):
             # Cancel
             bpy.ops.screen.frame_offset()
             return {'CANCELLED'}
-      
         return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
@@ -108,8 +106,6 @@ class AnimScrubber(bpy.types.Operator):
         if bpy.context.selected_pose_bones != None:
             for i in range(len(bpy.context.selected_pose_bones)):
                 # matrix needs copy or it remains linked
-                self.d[bpy.context.selected_pose_bones[i]
-                       .name] = bpy.context.selected_pose_bones[i].matrix.copy()
-        tools.Tools.recalculate_bone_paths(self)
-        context.window_manager.modal_handler_add(self)        
+                self.d[bpy.context.selected_pose_bones[i].name] = bpy.context.selected_pose_bones[i].matrix.copy()        
+        context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}

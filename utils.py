@@ -18,7 +18,7 @@ class GenericOperators(bpy.types.Operator):
             scene.frame_set(scene.frame_end)
             self.looped -= 1
         else:
-            scene.frame_set(self.valued - self.dampedvalue + self.sframe - (scene.frame_end * self.looped))
+            scene.frame_set(int(self.valued - self.dampedvalue + self.sframe - (scene.frame_end * self.looped)))
         bpy.ops.screen.frame_offset()
 
     def throw_key_generic(self, direction):
@@ -341,6 +341,7 @@ class GenericOperators(bpy.types.Operator):
         return {'FINISHED'}
 
     def mirror_space(self):
+        print("todo: switch to tools.py")
         obj = bpy.context.object  # active object
         action = obj.animation_data.action  # current action
         for selbone in bpy.context.selected_pose_bones:

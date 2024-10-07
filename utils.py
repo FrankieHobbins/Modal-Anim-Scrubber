@@ -675,7 +675,7 @@ class GenericOperators(bpy.types.Operator):
             currentaction = bpy.context.object.animation_data.action
             keys = currentaction.frame_range
             lastkey = (keys[-1])
-            scn.frame_end = lastkey
+            scn.frame_end = int(lastkey)
             print("actions")
         else:
             print("no actions")

@@ -47,5 +47,10 @@ class Tools(bpy.types.Operator):
         lastframe = bpy.context.scene.frame_end
         if bpy.context.selected_pose_bones:
             bpy.ops.pose.paths_clear()
-            bpy.ops.pose.paths_calculate(start_frame=0, end_frame=lastframe, bake_location='HEADS')
+            if bpy.context.preferences.addons["AnimScrubber"].preferences.recalculate_curves:
+                headOrTail = "TAILS"
+                if bpy.context.preferences.addons["AnimScrubber"].preferences.recalculate_curves_at_head:
+                    headOrTail = "HEADS"
+            #bpy.ops.pose.paths_calculate(start_frame=0, end_frame=lastframe + 1, bake_location=headOrTail)
+            bpy.ops.pose.paths_calculate(display_type='RANGE', range='SCENE', bake_location=headOrTail)
         return

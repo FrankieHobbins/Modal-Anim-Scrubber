@@ -12,45 +12,67 @@ bl_info = {
 import bpy
 import importlib
 
-# When main is already in local, we know this is not the initial import...
-if "main" in locals():    
+# Reload modules if already imported (for development purposes)
+if "main" in locals():
     importlib.reload(main)
     importlib.reload(utils)
     importlib.reload(tools)
-    
-    
+
 from . import main
 from . import utils
 from . import tools
 
-classes =   (
+# Add-on preferences class (minimal)
+class AnimScrubberPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+
+    recalculate_curves: bpy.props.BoolProperty(
+        name="Recalculate Animation Curves",
+        description="Enable or disable curve recalculation",
+        default=True
+    )
+
+    recalculate_curves_at_head: bpy.props.BoolProperty(
+        name="Recalculate Animation Curves At Head",
+        description="Curve recalculation at Head instead of Tail",
+        default=True
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "recalculate_curves")
+        layout.prop(self, "recalculate_curves_at_head")
+
+# Classes to register/unregister
+classes = (
+    AnimScrubberPreferences,  # Register preferences class
     main.AnimScrubber,
     utils.GenericOperators,
     tools.Tools,
-    )
-        
-# store keymaps here to access after registration
+)
+
+# Store keymaps here to access after registration
 addon_fkeymaps = []
 
 def register():
     from bpy.utils import register_class
     for cls in classes:
         register_class(cls)
-    # handle the keymap
+    # Handle the keymap
     wm = bpy.context.window_manager
     km = wm.keyconfigs.addon.keymaps.new(name='3D View', space_type='VIEW_3D', region_type='WINDOW', modal=False)
-    kmi = km.keymap_items.new('animscrubber.main', 'LEFTMOUSE', 'PRESS', alt=True)  
+    kmi = km.keymap_items.new('animscrubber.main', 'LEFTMOUSE', 'PRESS', alt=True)
     addon_fkeymaps.append(km)
 
 def unregister():
     from bpy.utils import unregister_class
     for cls in reversed(classes):
         unregister_class(cls)
-    # handle the keymap
+    # Handle the keymap
     wm = bpy.context.window_manager
     for km in addon_fkeymaps:
         wm.keyconfigs.addon.keymaps.remove(km)
     del addon_fkeymaps[:]
-        
+
 if __name__ == "__main__":
     register()

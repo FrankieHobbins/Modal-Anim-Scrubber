@@ -8,39 +8,46 @@ class Tools(bpy.types.Operator):
 
     def find_opposite_bone(self, selbone):
         centrebone = False
-        # TODO use regex like /_L(?:$|[._])/gm
-        if selbone.name[-1:] == "L":
-            oppobone = selbone.name[:-1] + "R"
-        elif selbone.name[-1:] == "R":
-            oppobone = selbone.name[:-1] + "L"
-        elif ".L" in selbone.name:
-            oppobone = str(selbone.name).replace(".L", ".R")
-        elif ".R" in selbone.name:
-            oppobone = str(selbone.name).replace(".R", ".L")
-        elif "L." in selbone.name:
-            oppobone = str(selbone.name).replace("L.", "R.")
-        elif "R." in selbone.name:
-            oppobone = str(selbone.name).replace("R.", "L.")
-        elif "_R_" in selbone.name:
-            oppobone = str(selbone.name).replace("_R_", "_L_")
-        elif "_L_" in selbone.name:
-            oppobone = str(selbone.name).replace("_L_", "_R_")
-        elif "_R" in selbone.name:
-            oppobone = str(selbone.name).replace("_R", "_L")
-        elif "_L" in selbone.name:
-            oppobone = str(selbone.name).replace("_L", "_R")
+        bone_name = selbone.name
+        bone_name_lower = bone_name.lower()
+
+        # Define patterns and their replacements
+        patterns = [
+            (".l", ".r"),
+            (".r", ".l"),
+            ("_l_", "_r_"),
+            ("_r_", "_l_"),
+            ("_l", "_r"),
+            ("_r", "_l"),
+            ("l.", "r."),
+            ("r.", "l."),
+        ]
+
+        oppobone = bone_name  # Default to original name
+
+        for pattern, replacement in patterns:
+            if pattern in bone_name_lower:
+                index = bone_name_lower.find(pattern)
+                oppobone = bone_name[:index] + replacement + bone_name[index + len(pattern):]
+                break
         else:
-            # check if oppo bone is valid
+            # Handle cases where the name ends with 'l' or 'r'
+            if bone_name_lower.endswith("l"):
+                oppobone = bone_name[:-1] + "R"
+            elif bone_name_lower.endswith("r"):
+                oppobone = bone_name[:-1] + "L"
+            else:
+                centrebone = True
+
+        # Verify if the opposite bone exists
+        pose_bones = bpy.context.selected_objects[0].pose.bones
+        if not any(b.name.lower() == oppobone.lower() for b in pose_bones):
+            print("Possible error (or not) with", selbone.name)
             oppobone = selbone.name
             centrebone = True
-        
-        if not [i for i in bpy.context.selected_objects[0].pose.bones if i.name == oppobone]:
-            print("possible error (or not) with ", selbone.name)
-            oppobone = selbone.name
-            centrebone = True
-        
-        print("B selected bone", selbone.name)
-        print("B opposite bone", oppobone)
+
+        print("Selected bone:", selbone.name)
+        print("Opposite bone:", oppobone)
         return [oppobone, centrebone]
 
     def recalculate_bone_paths(self):

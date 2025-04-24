@@ -77,7 +77,7 @@ class AnimScrubber(bpy.types.Operator):
             tools.Tools.recalculate_bone_paths(self)
 
         elif event.type == 'WHEELDOWNMOUSE':
-            # Create or Duplicate Keyframe base on startiong position
+            # Create or Duplicate Keyframe base on starting position
             utils.GenericOperators.throw_key_generic(self, "UP")
             tools.Tools.recalculate_bone_paths(self)
 

@@ -121,14 +121,17 @@ class GenericOperators(bpy.types.Operator):
                                         if k.co[0] >= (0.5*bpy.context.scene.frame_end):
                                             k.co[1] = k.co[1]*-1
                             elif "euler" in f.data_path:
-                                if f.array_index == 2:
+                                if f.array_index == 2 or f.array_index == 1:
+                                    print(f.data_path)
                                     for k in f.keyframe_points:
-                                        if k.co[0] >= (0.5*bpy.context.scene.frame_end):
+                                        if k.co[0] >= (0.5 * bpy.context.scene.frame_end):
                                             k.co[1] = k.co[1]*-1
+                                            print("flipping", k.co[0])
+                                        else:
+                                            print("not flipping", k.co[0])
                             # finally copy keyframe from start to end
                             f.keyframe_points.add(1)
-                            f.keyframe_points[len(
-                                f.keyframe_points)-1].co = bpy.context.scene.frame_end, f.keyframe_points[0].co[1]
+                            f.keyframe_points[len(f.keyframe_points)-1].co = bpy.context.scene.frame_end, f.keyframe_points[0].co[1]
                             f.update()
                 # if in second half of anim
                 if bpy.context.scene.frame_current > (0.5*bpy.context.scene.frame_end):
@@ -337,7 +340,7 @@ class GenericOperators(bpy.types.Operator):
                                     k1.co[1] = k.co[1]
                                 f.update()
 
-        #bpy.ops.pose.paths_calculate(start_frame=0, end_frame=bpy.context.scene.frame_end+1, bake_location='HEADS')
+        tools.Tools.recalculate_bone_paths(self);
         return {'FINISHED'}
 
     def mirror_space(self):
@@ -354,40 +357,10 @@ class GenericOperators(bpy.types.Operator):
             ii = 0
             copythis = 0
             centrebone = False
-            # work out opposite bone
+            opposite_bone = tools.Tools.find_opposite_bone(self, selbone)
+            oppobone = opposite_bone[0]
+            centrebone = opposite_bone[1]
 
-            if selbone.name[-1:] == "L":
-                oppobone = selbone.name[:-1] + "R"
-            elif selbone.name[-1:] == "R":
-                oppobone = selbone.name[:-1] + "L"
-            elif ".L" in selbone.name:
-                oppobone = str(selbone.name).replace(".L", ".R")
-            elif ".R" in selbone.name:
-                oppobone = str(selbone.name).replace(".R", ".L")
-            elif "L." in selbone.name:
-                oppobone = str(selbone.name).replace("L.", "R.")
-            elif "R." in selbone.name:
-                oppobone = str(selbone.name).replace("R.", "L.")
-            elif "_R_" in selbone.name:
-                oppobone = str(selbone.name).replace("_R_", "_L_")
-            elif "_L_" in selbone.name:
-                oppobone = str(selbone.name).replace("_L_", "_R_")
-            elif "_R" in selbone.name:
-                oppobone = str(selbone.name).replace("_R", "_L")
-            elif "_L" in selbone.name:
-                oppobone = str(selbone.name).replace("_L", "_R")
-            else:
-                oppobone = selbone.name
-                centrebone = True
-
-            if not [i for i in bpy.context.selected_objects[0].pose.bones if i.name == oppobone]:
-                print("possible error (or not) with ", selbone.name)
-                oppobone = selbone.name
-                centrebone = True
-
-            print("A selected bone", selbone.name)
-            print("A opposite bone", oppobone)
-            # if bone a central bone with no opposite
             if centrebone == True:
                 print("ignoring this command as bone is a centre bone")
 
